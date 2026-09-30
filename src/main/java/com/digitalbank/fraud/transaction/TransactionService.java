@@ -1,0 +1,6 @@
+package com.digitalbank.fraud.transaction;
+import com.digitalbank.fraud.account.*; import com.digitalbank.fraud.fraud.*; import com.digitalbank.fraud.shared.NotFoundException; import lombok.RequiredArgsConstructor; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+@Service @RequiredArgsConstructor public class TransactionService {
+ private final AccountRepository accounts; private final TransactionRepository transactions; private final FraudAlertRepository alerts; private final FraudRuleEngine engine;
+ @Transactional public BankTransaction create(TransactionRequest r){Account a=accounts.findById(r.accountId()).orElseThrow(()->new NotFoundException("Account not found")); FraudDecision d=engine.evaluate(a.getId(),r.amount(),r.countryCode()); BankTransaction t=new BankTransaction();t.setSourceAccount(a);t.setAmount(r.amount());t.setChannel(r.channel());t.setDeviceId(r.deviceId());t.setCountryCode(r.countryCode().toUpperCase());t.setRiskScore(d.riskScore());t.setStatus(d.flagged()?BankTransaction.Status.FLAGGED:BankTransaction.Status.APPROVED);t=transactions.save(t);if(d.flagged()){FraudAlert alert=new FraudAlert();alert.setTransaction(t);alert.setReason(d.reason());alert.setRiskScore(d.riskScore());alerts.save(alert);}return t;}
+}

@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/digitalbank}
+    username: ${DB_USERNAME:digitalbank}
+    password: ${DB_PASSWORD:digitalbank}
+  jpa:
+    hibernate:
+      ddl-auto: update
